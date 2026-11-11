@@ -251,9 +251,9 @@
         const ADSGRAM_BLOCK_IDS = [
             "int-57670", // Ad 1
             "57674",     // Ad 2
-            "int-58748",     // Ad 3
+            "int-58748", // Ad 3
             "57618",     // Ad 4
-            "int-58749",     // Ad 5
+            "int-58749", // Ad 5
             "58750",     // Ad 6
             "58751"      // Ad 7
         ];
@@ -263,6 +263,8 @@
 
         let currentAdStep = 0;
         let isAdLoading = false;
+        let coolDownTimer = 0;
+        let coolDownInterval = null;
 
         // Initialize App on Load
         window.addEventListener('DOMContentLoaded', () => {
@@ -284,7 +286,7 @@
 
         // 2. Dynamic Adsgram Handler with Block Rotation
         function handleWatchAd() {
-            if (isAdLoading) return;
+            if (isAdLoading || coolDownTimer > 0) return;
 
             if (currentAdStep >= TOTAL_ADS_REQUIRED) {
                 showToast("All ads completed! Click 'Verify Task' to download.", "success");
@@ -342,7 +344,23 @@
                 showToast("All 7 ads completed! Click 'Verify Task' now.", "success");
             } else {
                 showToast(`${tag} Ad ${currentAdStep} of 7 completed!`, "success");
+                startCoolDown();
             }
+        }
+
+        function startCoolDown() {
+            coolDownTimer = 7;
+            updateUI();
+
+            if (coolDownInterval) clearInterval(coolDownInterval);
+
+            coolDownInterval = setInterval(() => {
+                coolDownTimer--;
+                updateUI();
+                if (coolDownTimer <= 0) {
+                    clearInterval(coolDownInterval);
+                }
+            }, 1000);
         }
 
         function resetAdBtnState() {
@@ -380,9 +398,14 @@
                 // Highlight Verify Button
                 verifyBtn.classList.add('btn-ready');
                 verifyBtn.classList.remove('opacity-85');
+            } else if (coolDownTimer > 0) {
+                unlockBtnText.innerText = `Wait ${coolDownTimer}s for next ad`;
+                unlockIcon.className = "fa-solid fa-clock text-xs text-stone-200";
+                unlockBtn.classList.add('opacity-70');
             } else {
                 unlockBtnText.innerText = `Unlock Sensi (${currentAdStep}/${TOTAL_ADS_REQUIRED})`;
                 unlockIcon.className = "fa-solid fa-play text-xs text-stone-200";
+                unlockBtn.classList.remove('opacity-70');
             }
         }
 
